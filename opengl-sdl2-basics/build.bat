@@ -1,0 +1,1 @@
+cl main.c -IC:\SDL2\SDL2-2.24.0\include -IC:\SDL2\SDL2_image-2.6.2\include shell32.lib SDL2.lib SDL2main.lib SDL2_image.lib OPENGL32.lib /link /LIBPATH:C:\SDL2\SDL2-2.24.0\lib\x64 /LIBPATH:C:\SDL2\SDL2_image-2.6.2\lib\x64 /Subsystem:Console

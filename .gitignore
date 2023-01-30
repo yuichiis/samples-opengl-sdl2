@@ -1,0 +1,8 @@
+vendor/
+*.log
+*.exe
+*.obj
+composer.lock
+composer.phar
+samples/*.pkl
+samples/*.model
