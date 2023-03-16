@@ -1,9 +1,23 @@
+#if _MSC_VER
 #include <Windows.h>
+#endif
 #include <SDL.h>
 #include <SDL_opengl.h>
 #include <SDL_image.h>
 
 #include <stdio.h>
+#ifndef TRUE
+#define TRUE 1
+#endif
+#ifndef FALSE
+#define FALSE 0
+#endif
+#ifndef MIN
+#define MIN(i, j) (((i) < (j)) ? (i) : (j))
+#endif
+#ifndef MAX
+#define MAX(i, j) (((i) > (j)) ? (i) : (j))
+#endif
 
 const int FPS = 60;
 static int windowWidth = 640;
@@ -136,7 +150,7 @@ static void draw() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // setup view
-    int minviewf = (float)(min(windowWidth, windowHeight));
+    float minviewf = (float)(MIN(windowWidth, windowHeight));
     glPushMatrix();
     glTranslatef(0.0,0.0,0.0);
     glRotatef(0.0,0.0,0.0,1.0);
