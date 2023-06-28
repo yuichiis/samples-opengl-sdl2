@@ -3,6 +3,7 @@ vendor/
 *.exe
 *.obj
 *.out
+*.o
 composer.lock
 composer.phar
 samples/*.pkl
