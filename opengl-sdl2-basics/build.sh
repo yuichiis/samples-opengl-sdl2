@@ -8,4 +8,4 @@ SDL2LIBS=`pkg-config sdl2 --libs`
 SDL2FLAGS=`pkg-config sdl2 --cflags`
 SDL2LIBS_IMAGE=`pkg-config SDL2_image --libs`
 
-gcc $SDL2FLAGS main.c -lOpenGL $SDL2LIBS $SDL2LIBS_IMAGE
+gcc $SDL2FLAGS main.c -lOpenGL $SDL2LIBS $SDL2LIBS_IMAGE -o main.out
