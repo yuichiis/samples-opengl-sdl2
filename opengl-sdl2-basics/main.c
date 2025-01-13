@@ -26,7 +26,7 @@ static SDL_Window*   window = NULL;
 static SDL_GLContext context;
 static SDL_Renderer* renderer = NULL;
 static SDL_Surface*  primarySurface = NULL;
-static int rotation = 0.0;
+static float rotation = 0.0;
 static GLuint image_texture_id = 0;
 
 static int init() {
@@ -139,7 +139,7 @@ static void resize(int width, int height) {
 }
 
 static void update() {
-    rotation = rotation + 1.0;
+    rotation = rotation + 1.0f;
     if(rotation>=90.0) {
         rotation = 0.0;
     }
@@ -182,81 +182,81 @@ static void draw() {
     glColor4f(1.0, 1.0,  1.0, 1.0);
     glLineWidth(2.0);
     glBegin(GL_LINES);
-    glVertex2f(  0.2 ,   0.2);
-    glVertex2f(  0.3 ,   0.2);
+    glVertex2f(  0.2f ,   0.2f);
+    glVertex2f(  0.3f ,   0.2f);
     glEnd();
     glLineWidth(3.0);
     glBegin(GL_LINES);
-    glVertex2f(  0.3 ,   0.2);
-    glVertex2f(  0.3 ,   0.3);
+    glVertex2f(  0.3f ,   0.2f);
+    glVertex2f(  0.3f ,   0.3f);
     glEnd();
     glLineWidth(4.0);
     glBegin(GL_LINES);
-    glVertex2f(  0.3 ,   0.3);
-    glVertex2f(  0.2 ,   0.3);
+    glVertex2f(  0.3f ,   0.3f);
+    glVertex2f(  0.2f ,   0.3f);
     glEnd();
     glLineWidth(5.0);
     glBegin(GL_LINES);
-    glVertex2f(  0.2 ,   0.3);
-    glVertex2f(  0.2 ,   0.2);
+    glVertex2f(  0.2f ,   0.3f);
+    glVertex2f(  0.2f ,   0.2f);
     glEnd();
     glLineWidth(1.0);
 
     glEnable(GL_LINE_STIPPLE);
     glLineStipple(1, 0x00ff);
     glBegin(GL_LINES);
-    glVertex2f(  0.1 ,   0.06);
-    glVertex2f(  0.5 ,   0.06);
+    glVertex2f(  0.1f ,   0.06f);
+    glVertex2f(  0.5f ,   0.06f);
     glEnd();
     glLineStipple(1, 0x0f0f);
     glBegin(GL_LINES);
-    glVertex2f(  0.1 ,   0.09);
-    glVertex2f(  0.5 ,   0.09);
+    glVertex2f(  0.1f ,   0.09f);
+    glVertex2f(  0.5f ,   0.09f);
     glEnd();
     glLineStipple(1, 0x5555);
     glBegin(GL_LINES);
-    glVertex2f(  0.1 ,   0.12);
-    glVertex2f(  0.5 ,   0.12);
+    glVertex2f(  0.1f ,   0.12f);
+    glVertex2f(  0.5f ,   0.12f);
     glEnd();
     glLineStipple(1, 0x18ff);
     glBegin(GL_LINES);
-    glVertex2f(  0.1 ,   0.15);
-    glVertex2f(  0.5 ,   0.15);
+    glVertex2f(  0.1f ,   0.15f);
+    glVertex2f(  0.5f ,   0.15f);
     glEnd();
     glColor4f(1.0, 1.0,  0.0, 1.0);
     glLineStipple(2, 0x00ff);
     glBegin(GL_LINES);
-    glVertex2f(  0.5 ,   0.06);
-    glVertex2f(  0.9 ,   0.06);
+    glVertex2f(  0.5f ,   0.06f);
+    glVertex2f(  0.9f ,   0.06f);
     glEnd();
     glLineStipple(2, 0x0f0f);
     glBegin(GL_LINES);
-    glVertex2f(  0.5 ,   0.09);
-    glVertex2f(  0.9 ,   0.09);
+    glVertex2f(  0.5f ,   0.09f);
+    glVertex2f(  0.9f ,   0.09f);
     glEnd();
     glLineStipple(2, 0x5555);
     glBegin(GL_LINES);
-    glVertex2f(  0.5 ,   0.12);
-    glVertex2f(  0.9 ,   0.12);
+    glVertex2f(  0.5f ,   0.12f);
+    glVertex2f(  0.9f ,   0.12f);
     glEnd();
     glLineStipple(2, 0x18ff);
     glBegin(GL_LINES);
-    glVertex2f(  0.5 ,   0.15);
-    glVertex2f(  0.9 ,   0.15);
+    glVertex2f(  0.5f ,   0.15f);
+    glVertex2f(  0.9f ,   0.15f);
     glEnd();
     glDisable(GL_LINE_STIPPLE);
 
     glLineWidth(1.0);
     glPushMatrix();
     glTranslatef(-0.5,0.5,0.0);
-    glRotatef(rotation, 0.0, 0.0, 1.0);
+    glRotatef(rotation, 0.0f, 0.0f, 1.0f);
     glScalef(0.5,0.5,0.5);
     glColor4f(0.0, 0.0,  1.0, 1.0);
     glBegin(GL_QUADS);
-    glVertex2f( -0.5 ,  -0.5);
-    glVertex2f(  0.5 ,  -0.5);
-    glVertex2f(  0.5 ,   0.5);
-    glVertex2f( -0.5 ,   0.5);
+    glVertex2f( -0.5f ,  -0.5f);
+    glVertex2f(  0.5f ,  -0.5f);
+    glVertex2f(  0.5f ,   0.5f);
+    glVertex2f( -0.5f ,   0.5f);
     glEnd();
     glPopMatrix();
 
@@ -269,22 +269,22 @@ static void draw() {
     glEnable(GL_TEXTURE_2D);
     glBegin(GL_QUADS);
     glTexCoord2d(0.0, 1.0);
-    glVertex2f( -0.5 ,  -0.5);
+    glVertex2f( -0.5f ,  -0.5f);
     glTexCoord2d(1.0, 1.0);
-    glVertex2f(  0.5 ,  -0.5);
+    glVertex2f(  0.5f ,  -0.5f);
     glTexCoord2d(1.0, 0.0);
-    glVertex2f(  0.5 ,   0.5);
+    glVertex2f(  0.5f ,   0.5f);
     glTexCoord2d(0.0, 0.0);
-    glVertex2f( -0.5 ,   0.5);
+    glVertex2f( -0.5f ,   0.5f);
     glEnd();
     glDisable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, 0);
     glColor4f(0.0, 1.0, 1.0, 1.0);
     glBegin(GL_LINE_LOOP);
-    glVertex2f( -0.5 ,  -0.5);
-    glVertex2f(  0.5 ,  -0.5);
-    glVertex2f(  0.5 ,   0.5);
-    glVertex2f( -0.5 ,   0.5);
+    glVertex2f( -0.5f ,  -0.5f);
+    glVertex2f(  0.5f ,  -0.5f);
+    glVertex2f(  0.5f ,   0.5f);
+    glVertex2f( -0.5f ,   0.5f);
     glEnd();
     glPopMatrix();
 
@@ -318,7 +318,7 @@ static int pollingEvent()
             }
             case SDL_WINDOWEVENT: {
                 SDL_WindowEventID event;
-                event = ev.window.event;
+                event = (SDL_WindowEventID)ev.window.event;
                 if(event == SDL_WINDOWEVENT_RESIZED) {
                     resize(ev.window.data1,ev.window.data2);
                 }
@@ -330,8 +330,8 @@ static int pollingEvent()
 
 int main(int argc, char *argv[])
 {
-    static int interval;
-    static int nextTime;
+    static Uint64 interval;
+    static Uint64 nextTime;
     if(!init()) {
         return 0;
     }
