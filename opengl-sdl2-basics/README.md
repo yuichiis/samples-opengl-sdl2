@@ -1,3 +1,5 @@
+# Basic Sample code of OpenGL on SDL2
+
 ## Build on Windows with VC++
 
 ### Download SDL2 and SDL2_image
