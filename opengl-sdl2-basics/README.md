@@ -3,8 +3,9 @@
 ## Build on Windows with VC++
 
 ### Download SDL2 and SDL2_image
-https://github.com/libsdl-org/SDL/releases
-https://github.com/libsdl-org/SDL_image/releases
+Download from ...
+- https://github.com/libsdl-org/SDL/releases
+- https://github.com/libsdl-org/SDL_image/releases
 
 for Build...
 - SDL2-devel-2.X.X-VC.zip
