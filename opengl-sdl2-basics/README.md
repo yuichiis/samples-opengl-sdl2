@@ -41,23 +41,27 @@ Run cmake
 ```
 
 ### Run
+```shell
 > build\Release\sdl2basics.exe
+```
 
 ## Build on Linux with g++
 
 ### Install SDL2 and SDL2_image
 ```shell
-sudo apt install libsdl2-dev
-sudo apt install libsdl2-image-dev
+$ sudo apt install libsdl2-dev
+$ sudo apt install libsdl2-image-dev
 ```
 OpenGL headers are included in graphics environment on Linux
 
 ### Build
 Run cmake
 ```shell
-> cmake -S . -B build
-> cmake --build build --config Release
+$ cmake -S . -B build
+$ cmake --build build --config Release
 ```
 
 ### Run
-> build/sdl2basics
+```shell
+$ build/sdl2basics
+```
