@@ -29,23 +29,33 @@ if(MSVC)
   list(APPEND CMAKE_PREFIX_PATH ${SDL2_DIR}/cmake)
   list(APPEND CMAKE_PREFIX_PATH ${SDL2_IMAGE_DIR}/cmake)
   message(STATUS "CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
+  list(APPEND CMAKE_PREFIX_PATH ${SDL2_DIR}/cmake)
 
 endif()
 
 find_package(SDL2 REQUIRED)
-find_package(SDL2_image REQUIRED)
 find_package(OpenGL REQUIRED)
 
-add_executable(${PROJECT_NAME} main.c)
+if(MSVC)
+    find_package(SDL2_image REQUIRED)
+    set(SDL2_IMAGE_LIBS SDL2_image::SDL2_image)
+elseif(UNIX)
+    # Use pkg-config to locate SDL2_image
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(SDL2_IMAGE REQUIRED SDL2_image)
+    # Include directories for SDL2_image
+    include_directories(${SDL2_IMAGE_INCLUDE_DIRS})
+    link_directories(${SDL2_IMAGE_LIBRARY_DIRS})
+    # Add libraries to link
+    set(SDL2_IMAGE_LIBS ${SDL2_IMAGE_LIBRARIES})
+endif()
 
-#if(MSVC)
-#  set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "/SUBSYSTEM:CONSOLE")
-#endif()
+add_executable(${PROJECT_NAME} main.c)
 
 target_link_libraries(${PROJECT_NAME} 
     SDL2::SDL2
     SDL2::SDL2main
-    SDL2_image::SDL2_image
+    ${SDL2_IMAGE_LIBS}
     OpenGL::GL
 )
 
