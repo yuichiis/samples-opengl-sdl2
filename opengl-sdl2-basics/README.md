@@ -45,7 +45,7 @@ Run cmake
 > build\Release\sdl2basics.exe
 ```
 
-## Build on Linux with g++
+## Build on Linux with gcc
 
 ### Install SDL2 and SDL2_image
 ```shell
