@@ -82,7 +82,11 @@ elseif(UNIX)
     link_directories(${SDL2_IMAGE_LIBRARY_DIRS})
     # Add libraries to link
     set(SDL2_IMAGE_LIBS ${SDL2_IMAGE_LIBRARIES})
-    set(OPENGL_LIBS OpenGL::GL)
+
+    pkg_check_modules(GLEW REQUIRED glew)
+    include_directories(${GLEW_INCLUDE_DIRS})
+    link_directories(${GLEW_LIBRARY_DIRS})
+    set(OPENGL_LIBS ${SDL2_IMAGE_LIBRARIES})
 endif()
 message(STATUS "OPENGL_LIBS: ${OPENGL_LIBS}")
 
