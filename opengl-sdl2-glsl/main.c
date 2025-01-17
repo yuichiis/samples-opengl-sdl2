@@ -323,9 +323,9 @@ static int initShader()
     const char *frag_sources[] = {
         "#version 100\n"
         "precision mediump float;\n"
-        "uniform vec2  iResolution;\n"
+        "uniform vec2  resolution;\n"
         "void main(){\n"
-            "float red = abs(gl_FragCoord.x/iResolution.x);\n"
+            "float red = abs(gl_FragCoord.x/resolution.x);\n"
             "gl_FragColor=vec4(red, 0.0, 0.0, 0.0);\n"
         "}\n"
     };
@@ -365,7 +365,7 @@ static int initShader()
     nvertices = sizeof(vertices)/sizeof(float);
 
     // setup uniforms
-    uniform_res = glGetUniformLocation(program.id, "iResolution");
+    uniform_res = glGetUniformLocation(program.id, "resolution");
     uniform_model = glGetUniformLocation(program.id, "model");
     uniform_view = glGetUniformLocation(program.id, "view");
     uniform_projection = glGetUniformLocation(program.id, "projection");
