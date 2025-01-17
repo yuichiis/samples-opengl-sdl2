@@ -73,6 +73,7 @@ if(MSVC)
     
     set(SDL2_IMAGE_LIBS SDL2_image::SDL2_image)
     set(OPENGL_LIBS OpenGL::GL GLEW::GLEW)
+    set(MATH_LIBS "")
 elseif(UNIX)
     # Use pkg-config to locate SDL2_image
     find_package(PkgConfig REQUIRED)
@@ -87,6 +88,8 @@ elseif(UNIX)
     include_directories(${GLEW_INCLUDE_DIRS})
     link_directories(${GLEW_LIBRARY_DIRS})
     set(OPENGL_LIBS ${GLEW_LIBRARIES})
+    set(MATH_LIBS "m")
+
 endif()
 message(STATUS "OPENGL_LIBS: ${OPENGL_LIBS}")
 
@@ -97,6 +100,7 @@ target_link_libraries(${PROJECT_NAME}
     SDL2::SDL2main
     ${SDL2_IMAGE_LIBS}
     ${OPENGL_LIBS}
+    ${MATH_LIBS}
 )
 
 ## If you want to build the Release version, type the following command
