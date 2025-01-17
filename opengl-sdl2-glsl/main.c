@@ -32,7 +32,6 @@ static SDL_GLContext context;
 static SDL_Renderer* renderer = NULL;
 static SDL_Surface*  primarySurface = NULL;
 static float rotation = 0.0;
-static program_t shadingProgram = { 0, 0, 0 };
 
 // vertices
 const GLint location_position = 0;
@@ -50,6 +49,7 @@ static GLfloat view[4][4];
 static GLfloat projection[4][4];
 
 // object names
+static program_t shadingProgram = { 0, 0, 0 };
 static GLint buffer_vertices;
 static GLint uniform_res;
 static GLint uniform_model;
