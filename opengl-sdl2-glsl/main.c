@@ -33,18 +33,24 @@ static SDL_Renderer* renderer = NULL;
 static SDL_Surface*  primarySurface = NULL;
 static float rotation = 0.0;
 static program_t shadingProgram = { 0, 0, 0 };
+
+// vertices
+const GLint location_position = 0;
+static GLenum drawMode = GL_TRIANGLE_STRIP;
 static GLfloat vertices[] = {
     -1.0f,   -1.0f,
      1.0f,   -1.0f,
      0.0f,    1.0f,
 };
 static GLsizei nvertices = 0;
-static GLenum drawMode = GL_TRIANGLE_STRIP;
+
+// transformation matrices
 static GLfloat model[4][4];
 static GLfloat view[4][4];
 static GLfloat projection[4][4];
 
-static GLint attrib_position = 0;
+// object names
+static GLint buffer_vertices;
 static GLint uniform_res;
 static GLint uniform_gtime;
 static GLint uniform_model;
@@ -301,6 +307,7 @@ static int finalize() {
     if(glIsShader(shadingProgram.frag)) {
         glDeleteShader(shadingProgram.frag);
     }
+    glDeleteBuffers(1, &buffer_vertices);
 
     //if(Renderer) {
     //    SDL_DestroyRenderer(Renderer);
@@ -362,17 +369,20 @@ static int initShader()
     glUseProgram(program.id);
 
     // bind vertex array
-    glEnableVertexAttribArray(attrib_position);
+    glGenBuffers(1, &buffer_vertices);
+    glBindBuffer(GL_ARRAY_BUFFER, buffer_vertices);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
     
     // GLAPI void APIENTRY glVertexAttribPointer (GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void *pointer);
     glVertexAttribPointer(
-        attrib_position,    // attrib id
-        2,                  // vec2
+        location_position,  // location of position attribute
+        2,                  // size = vec2
         GL_FLOAT,           // type float
         GL_FALSE,           // normalized
-        0,                  // stride:   0: default
-        vertices            // vertex array address
+        0,                  // stride:   0: default = size
+        (void*)0            // vertex offset address
     );
+    glEnableVertexAttribArray(location_position);
     nvertices = sizeof(vertices)/sizeof(float);
 
     // setup uniforms
@@ -426,6 +436,7 @@ static void draw() {
     // clear
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     // draw from array
+    // void glDrawArrays(GLenum mode, GLint first, GLsizei count)
     glDrawArrays(drawMode, 0, nvertices);
 }
 
