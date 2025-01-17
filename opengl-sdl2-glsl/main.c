@@ -1,247 +1,55 @@
-/*
- * Make uniform_mouse work
- * Use multiple multipart shaders
- * TODO explain vertices[] and glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
- */
-
+#if _MSC_VER
+#include <Windows.h>
+#endif
 #include <SDL.h>
-#include <SDL_image.h> // Just for the icon - easy to strip out
 //#include <SDL_opengl.h>
 #include <GL/glew.h>
-#include "def_shaders.h"
+
+#include <math.h>
 #include <stdio.h>
+#ifndef TRUE
+#define TRUE 1
+#endif
+#ifndef FALSE
+#define FALSE 0
+#endif
 
-#define EXIT_SUCCESS 0
 
-int ww=500;
-int wh=281;
+typedef struct _program {
+    GLuint vtx;
+    GLuint frag;
+    GLuint id;
+} program_t;
 
-char   Running     = 1;
-GLuint switch_counter = 2; // switches shading programs
+const int SUCCESS = 1;
+const int FAILED = 0;
 
-GLfloat vertices[] = {
+const int FPS = 60;
+static int windowWidth = 640;
+static int windowHeight = 480;
+static SDL_Window*   window = NULL;
+static SDL_GLContext context;
+static SDL_Renderer* renderer = NULL;
+static SDL_Surface*  primarySurface = NULL;
+static float rotation = 0.0;
+static program_t shadingProgram = { 0, 0, 0 };
+static GLfloat vertices[] = {
     -1.0f,   -1.0f,
      1.0f,   -1.0f,
-    -1.0f,    1.0f,
-     1.0f,    1.0f,
+     0.0f,    1.0f,
 };
+static GLsizei nvertices = 0;
+static GLenum drawMode = GL_TRIANGLE_STRIP;
+static GLfloat model[4][4];
+static GLfloat view[4][4];
+static GLfloat projection[4][4];
 
-GLint attrib_position;
-GLint uniform_res;        // Resolution
-GLint uniform_gtime;
-GLint uniform_mouse;        //image/buffer    xy = current pixel coords (if LMB is down). zw = click pixel
-
-GLuint default_shaders        (GLuint);
-GLuint default_vertex        (void);
-void     shader_switch        (void);
-
-GLuint shading_program_id[4];
-
-// loads a shader from file and returns the compiled shader
-GLuint GetShader        (GLenum     , const char *);
-
-const char * read_file        (const char *);
-float  fTime            (void);
-void   init_glew        (void);
-
-GLuint compile_shader        (GLenum type, GLsizei , const char **);
-GLuint program_check        (GLuint);
-
-int main(int argc, char *argv[])
-{
-    (void)argc;
-    (void)argv;
-
-    SDL_Init(SDL_INIT_VIDEO);
-
-    SDL_Window *Window = SDL_CreateWindow("2d - uniform mouse",
-        SDL_WINDOWPOS_CENTERED,
-        SDL_WINDOWPOS_CENTERED,
-        ww, wh,
-        SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL |SDL_WINDOW_RESIZABLE);
-
-    //BEGIN ICON
-
-    SDL_Surface *icon;
-    icon=IMG_Load("../assets/gfx/icon.png");
-    SDL_SetWindowIcon(Window, icon);
-    SDL_FreeSurface(icon);
-
-    //END     ICON
-
-    SDL_GLContext glContext = SDL_GL_CreateContext(Window);
-    init_glew();
-    SDL_Log("Trying to build default shaders");
-    for (int i=0; i<3; i++){
-        shading_program_id[i] = default_shaders(i);
-        SDL_Log("i: %d", i);
-    }
-    if (shading_program_id[0] == 0){
-        Running = 0;
-        if (glGetError()!=0)
-            SDL_Log("glError: %#08x\n", glGetError());
-    }
-    glUseProgram(shading_program_id[2]);
-    glEnableVertexAttribArray    (attrib_position);
-    glVertexAttribPointer        (attrib_position, 2, GL_FLOAT, GL_FALSE, 0, vertices);
-
-    uniform_res   = glGetUniformLocation(shading_program_id[2], "iResolution");
-    uniform_gtime = glGetUniformLocation(shading_program_id[2], "iTime");
-    uniform_mouse = glGetUniformLocation(shading_program_id[2], "iMouse");
-
-    glUniform3f(uniform_res, (float)ww, (float)wh, 0.0f);
-
-    SDL_Point mouse;
-    char MBL_CLICK=0;
-
-    while (Running){
-        SDL_Event event;
-        while ( SDL_PollEvent(&event) ){
-            SDL_GetMouseState(&mouse.x, &mouse.y);
-            if (event.type == SDL_QUIT)
-                Running = 0;
-            else if (event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_ESCAPE)
-                Running = 0;
-            if(event.type == SDL_WINDOWEVENT){
-                if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED){
-                    ww = event.window.data1;
-                    wh = event.window.data2;
-                    glViewport (0, 0, ww, wh);
-                }
-            }
-            if(event.type == SDL_MOUSEMOTION){
-                ;
-            }
-            if(event.type == SDL_MOUSEBUTTONDOWN){
-                if(event.button.button == SDL_BUTTON_RIGHT){
-                    ;
-                }
-                if(event.button.button == SDL_BUTTON_MIDDLE){
-                    shader_switch();
-                }
-                if( event.button.button == SDL_BUTTON_LEFT){
-                    MBL_CLICK=1;
-                }
-            }
-            if(event.type == SDL_MOUSEBUTTONUP){
-                if( event.button.button == SDL_BUTTON_LEFT){
-                    MBL_CLICK=0;
-                }
-            }
-        }
-
-        glClear(GL_COLOR_BUFFER_BIT);
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-        if (MBL_CLICK==1)
-            glUniform4f(uniform_mouse, (float)mouse.x, (float)mouse.y, 0.0f, 0.0f );
-
-        glUniform1f(uniform_gtime, fTime());
-
-        SDL_GL_SwapWindow(Window);
-    }
-
-    // free resources
-    for (int i=0; i<3; i++){
-        if (glIsProgram(shading_program_id[i]))
-            glDeleteProgram(shading_program_id[i]);
-    }
-    SDL_GL_DeleteContext(glContext);
-    SDL_Quit();
-
-    return EXIT_SUCCESS;
-}
-
-const char * read_file(const char *filename)
-{
-    long length;
-    char *result = NULL;
-    FILE *file = fopen(filename, "r");
-    if(file) {
-        int status = fseek(file, 0, SEEK_END);
-        if(status != 0) {
-            fclose(file);
-            return NULL;
-        }
-        length = ftell(file);
-        status = fseek(file, 0, SEEK_SET);
-        if(status != 0) {
-            fclose(file);
-            return NULL;
-        }
-        result = malloc((length+1) * sizeof(char));
-        if(result) {
-            size_t actual_length = fread(result, sizeof(char), length , file);
-            result[actual_length++] = '\0';
-        }
-        fclose(file);
-        return result;
-    }
-    SDL_LogError(SDL_LOG_CATEGORY_ERROR,"Couldn't read %s", filename);
-
-    return NULL;
-}
-
-float fTime(void)
-{
-    static Uint64 start      = 0;
-    static Uint64 frequency  = 0;
-
-    if (start==0){
-        start         =    SDL_GetPerformanceCounter();
-        frequency     =    SDL_GetPerformanceFrequency();
-        return 0.0f;
-    }
-
-    Uint64 counter         = SDL_GetPerformanceCounter();
-    Uint64 accumulate      = counter - start;
-
-    return   (float)accumulate / (float)frequency;
-}
-
-void init_glew(void)
-{
-    GLenum status;
-    status = glewInit();
-    
-    if (status != GLEW_OK){
-        SDL_Log("glewInit error: %s\n", glewGetErrorString (status));
-        Running = 0;
-    }
-
-    SDL_Log(
-		"\n"
-		"GL_VERSION   : %s\n"
-		"GL_VENDOR    : %s\n"
-		"GL_RENDERER  : %s\n"
-    	"GLEW_VERSION : %s\n"
-		"GLSL VERSION : %s\n",
-     	glGetString (GL_VERSION),
-		glGetString (GL_VENDOR),
-        glGetString (GL_RENDERER),
-		glewGetString (GLEW_VERSION),
-        glGetString (GL_SHADING_LANGUAGE_VERSION)
-	);
-
-    int maj;
-    int min;
-    SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION,   &maj);
-    SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION,   &min);
-    SDL_Log("Using OpenGL %d.%d", maj, min);
-
-    if (!GLEW_VERSION_2_0){
-        SDL_Log("At least OpenGL 2.0 with GLSL 1.10 required.");
-        Running = 0;
-    }
-}
-//BEGIN GPU PROGRAM CREATION
-
-GLuint GetShader(GLenum eShaderType, const char *filename)
-{
-    const char *shaderSource=read_file(filename);
-    GLuint shader = compile_shader(eShaderType, 1, &shaderSource);
-
-    return shader;
-}
+static GLint attrib_position = 0;
+static GLint uniform_res;
+static GLint uniform_gtime;
+static GLint uniform_model;
+static GLint uniform_view;
+static GLint uniform_projection;
 
 GLuint compile_shader(GLenum type, GLsizei nsources, const char **sources)
 {
@@ -249,12 +57,14 @@ GLuint compile_shader(GLenum type, GLsizei nsources, const char **sources)
     GLint   success, len;
     GLsizei i, *srclens;
 
-	srclens = malloc(sizeof(GLsizei)*nsources);
+    srclens = malloc(sizeof(GLsizei)*nsources);
     for (i = 0; i < nsources; ++i) {
         srclens[i] = (GLsizei)strlen(sources[i]);
-	}
+    }
+    SDL_Log("done setuping source length.");
 
     shader = glCreateShader(type);
+    SDL_Log("shader is created.");
     glShaderSource(shader, nsources, sources, srclens);
     glCompileShader(shader);
 
@@ -267,10 +77,12 @@ GLuint compile_shader(GLenum type, GLsizei nsources, const char **sources)
             char *log;
             log = malloc(len);
             glGetShaderInfoLog(shader, len, NULL, log);
-            fprintf(stderr, "%s\n\n", log);
+            SDL_Log("%s\n\n", log);
             free(log);
         }
         SDL_Log("Error compiling shader.\n");
+        glDeleteShader(shader);
+        return 0;
     }
     SDL_Log("shader: %u",shader);
 
@@ -303,74 +115,402 @@ GLuint program_check(GLuint program)
     return GL_TRUE;
 }
 
-//END     GPU PROGRAM CREATION
-
-GLuint default_shaders(GLuint choice)
+program_t load_shaders(
+    const GLsizei n_vtx, const char **vtx_sources,
+    const GLsizei n_frag, const char **frag_sources
+    )
 {
-    SDL_Log("choice def: %d", choice);
     GLuint vtx;
-    vtx = default_vertex();
-
-    if (vtx==0) return 0;
-
     GLuint frag;
-    const char *sources[4];
-    sources[0] = common_shader_header;
-    sources[1] = fragment_shader_header;
+    GLuint program;
+    program_t shader_program = { 0, 0, 0 };
 
-    switch(choice)
-    {
-        case 0:
-            sources[2] = default_fragment_shader_0;
-            break;
-        case 1:
-            sources[2] = default_fragment_shader_1;
-            break;
-        case 2:
-            sources[2] = default_fragment_shader;
-            break;
-        default:
-            break;
+    SDL_Log("Trying to compile vertex shader");
+    vtx = compile_shader(GL_VERTEX_SHADER, 1, vtx_sources);
+    if(vtx==0) {
+        SDL_Log("Compile Error in vertex shader");
+        return shader_program;
     }
 
-    sources[3] = fragment_shader_footer;
-    frag = compile_shader(GL_FRAGMENT_SHADER, 4, sources);
+    SDL_Log("Trying to compile fragment shader");
+    frag = compile_shader(GL_FRAGMENT_SHADER, 1, frag_sources);
+    if(frag==0) {
+        SDL_Log("Compile Error in fragment shader");
+        glDeleteShader(vtx);
+        return shader_program;
+    }
 
-    shading_program_id[choice] = glCreateProgram();
-    glAttachShader(shading_program_id[choice], vtx);
-    glAttachShader(shading_program_id[choice], frag);
-    glLinkProgram(shading_program_id[choice]);
+    program = glCreateProgram();
+    glAttachShader(program, vtx);
+    glAttachShader(program, frag);
+    glLinkProgram(program);
 
     //Error Checking
     GLuint status;
-    status=program_check(shading_program_id[choice]);
-    if (status==GL_FALSE) return 0;
+    status=program_check(program);
+    if(status==GL_FALSE) {
+        glDeleteShader(vtx);
+        glDeleteShader(frag);
+        return shader_program;
+    }
 
-    return shading_program_id[choice];
+    shader_program.vtx = vtx;
+    shader_program.frag = frag;
+    shader_program.id = program;
+
+    return shader_program;
 }
 
-GLuint default_vertex(void)
+GLfloat fTime(void)
 {
-    GLuint vtx;
-    const char *sources[2];
-    sources[0] = common_shader_header;
-    sources[1] = vertex_shader_body;
-    vtx = compile_shader(GL_VERTEX_SHADER, 2, sources);
+    static Uint64 start      = 0;
+    static Uint64 frequency  = 0;
 
-    return vtx;
+    if (start==0){
+        start         =    SDL_GetPerformanceCounter();
+        frequency     =    SDL_GetPerformanceFrequency();
+        return 0.0f;
+    }
+
+    Uint64 counter         = SDL_GetPerformanceCounter();
+    Uint64 accumulate      = counter - start;
+
+    GLfloat timefloat = (GLfloat)accumulate / (GLfloat)frequency;
+    return timefloat;
 }
 
-void shader_switch(void)
+#include <math.h>
+
+static void createTransformationMatrix(
+    GLfloat angle,
+    GLfloat tx,
+    GLfloat ty,
+    GLfloat tz,
+    GLfloat matrix[4][4]
+    ) {
+    GLfloat radians = angle * (GLfloat)M_PI / 180.0f; // from degree to radian
+    GLfloat cosTheta = cosf(radians);
+    GLfloat sinTheta = sinf(radians);
+
+    // A transformation matrix that combines a rotation around the Z axis and a translation
+    matrix[0][0] = cosTheta;
+    matrix[0][1] = -sinTheta;
+    matrix[0][2] = 0.0;
+    matrix[0][3] = tx;
+    matrix[1][0] = sinTheta;
+    matrix[1][1] = cosTheta;
+    matrix[1][2] = 0.0;
+    matrix[1][3] = ty;
+    matrix[2][0] = 0.0;
+    matrix[2][1] = 0.0;
+    matrix[2][2] = 1.0;
+    matrix[2][3] = tz;
+    matrix[3][0] = 0.0;
+    matrix[3][1] = 0.0;
+    matrix[3][2] = 0.0;
+    matrix[3][3] = 1.0;
+}
+
+static int init() {
+
+    //// Init Window
+    if(SDL_Init(SDL_INIT_VIDEO) < 0) {
+        SDL_Log("Unable to Init SDL: %s", SDL_GetError());
+        return FAILED;
+    }
+
+    // enable double buffering
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+
+    window = SDL_CreateWindow(
+        "My SDL Game",
+        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+        windowWidth, windowHeight, 
+        SDL_WINDOW_OPENGL|SDL_WINDOW_RESIZABLE);
+    if(window == NULL) {
+        SDL_Log("Unable to create SDL Window: %s", SDL_GetError());
+        return FAILED;
+    }
+    context = SDL_GL_CreateContext(window);
+    if (!context) {
+        SDL_Log("Unable to Init GL Context: %s", SDL_GetError());
+        return FAILED;
+    }
+
+    // setup viewport
+    glViewport(0, 0, windowWidth, windowHeight); // Default
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    //glEnable(GL_DEPTH_TEST);
+
+    // setup projection matrix
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    //gluPerspective(45.0, (GLdouble) windowWidth / (GLdouble) windowHeight, 2.0, 200.0);
+
+    // setup light
+    //static GLfloat position[] = {-10.0f, 10.0f, 10.0f, 1.0f};
+    //static GLfloat ambient [] = { 1.0f, 1.0f, 1.0f, 1.0f};
+    //static GLfloat diffuse [] = { 1.0f, 1.0f, 1.0f, 1.0f};
+    //static GLfloat specular[] = { 0.0f, 0.0f, 0.0f, 0.0f};
+    //glLightfv(GL_LIGHT0, GL_POSITION, position);
+    //glLightfv(GL_LIGHT0, GL_AMBIENT, ambient);
+    //glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
+    //glLightfv(GL_LIGHT0, GL_SPECULAR, specular);
+    //glLightModelf(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);
+    //glEnable(GL_LIGHTING);
+    //glEnable(GL_LIGHT0);
+
+    int maj;
+    int min;
+    SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION,   &maj);
+    SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION,   &min);
+    SDL_Log("Using OpenGL %d.%d", maj, min);
+
+    SDL_Log(
+        "\nGL_VERSION   : %s"
+        "\nGL_VENDOR    : %s"
+        "\nGL_RENDERER  : %s"
+        "\nGLSL VERSION : %s"
+        //"\nGL_EXTENSIONS  : %s"
+        "\n",
+        glGetString(GL_VERSION),
+        glGetString(GL_VENDOR),
+        glGetString(GL_RENDERER),
+        glGetString(GL_SHADING_LANGUAGE_VERSION)
+        //glGetString(GL_EXTENSIONS)
+    );
+
+    GLenum status;
+    status = glewInit();
+    
+    if (status != GLEW_OK){
+        SDL_Log("glewInit error: %s\n", glewGetErrorString (status));
+        return FAILED;
+    }
+
+    return SUCCESS;
+}
+
+static int finalize() {
+    if(glIsProgram(shadingProgram.id)) {
+        glDeleteProgram(shadingProgram.id);
+    }
+    if(glIsShader(shadingProgram.vtx)) {
+        glDeleteShader(shadingProgram.vtx);
+    }
+    if(glIsShader(shadingProgram.frag)) {
+        glDeleteShader(shadingProgram.frag);
+    }
+
+    //if(Renderer) {
+    //    SDL_DestroyRenderer(Renderer);
+    //    Renderer = NULL;
+    //}
+    //
+    //if(Window) {
+    //    SDL_DestroyWindow(Window);
+    //    Window = NULL;
+    //}
+
+    // finalize SDL
+    SDL_Quit();
+
+    return TRUE;
+}
+
+static int initShader()
 {
-    switch_counter++;
-    if (switch_counter>(2)) switch_counter = 0;
-    SDL_Log("switch_counter: %d", switch_counter);
-    glUseProgram(shading_program_id[switch_counter]);
-    uniform_gtime = glGetUniformLocation(shading_program_id[switch_counter], "iTime");
-    uniform_res   = glGetUniformLocation(shading_program_id[switch_counter], "iResolution");
-    uniform_mouse = glGetUniformLocation(shading_program_id[switch_counter], "iMouse");
-    glEnableVertexAttribArray    (attrib_position);
-    glVertexAttribPointer        (attrib_position, 2, GL_FLOAT, GL_FALSE, 0, vertices);
-    glUniform3f(uniform_res, (float)ww, (float)wh, 0.0f);
-    glViewport (0, 0, ww, wh);
+    const char *vtx_sources[] = {
+        "#version 100\n"
+        "precision mediump float;\n"
+        "attribute vec4 position;\n"
+        "uniform mat4 model;\n"
+        "uniform mat4 view;\n"
+        "uniform mat4 projection;\n"
+
+        "void main(){\n"
+            "gl_Position=projection*view*model*position;\n"
+        "}\n"
+    };
+
+    const char *frag_sources[] = {
+        "#version 100\n"
+        "precision mediump float;\n"
+        "uniform float iTime;\n"
+        "uniform vec2  iResolution;\n"
+        "void main(){\n"
+            "float red = abs(gl_FragCoord.x/iResolution.x);\n"
+            "gl_FragColor=vec4(red, 0.0, 0.0, 0.0);\n"
+        "}\n"
+    };
+
+    SDL_Log("Trying to build default shaders");
+
+    program_t program = load_shaders(1, vtx_sources, 1, frag_sources);
+    SDL_Log("Program ID: %d",program.id);
+
+    if(program.id == 0){
+        if(glGetError()!=0) {
+            SDL_Log("glError: %#08x\n", glGetError());
+        }
+        return FAILED;
+    }
+    // save shared shadingProgram variable
+    shadingProgram = program;
+
+    // use shader program
+    glUseProgram(program.id);
+
+    // bind vertex array
+    glEnableVertexAttribArray(attrib_position);
+    
+    // GLAPI void APIENTRY glVertexAttribPointer (GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void *pointer);
+    glVertexAttribPointer(
+        attrib_position,    // attrib id
+        2,                  // vec2
+        GL_FLOAT,           // type float
+        GL_FALSE,           // normalized
+        0,                  // stride:   0: default
+        vertices            // vertex array address
+    );
+    nvertices = sizeof(vertices)/sizeof(float);
+
+    // setup uniforms
+    uniform_res = glGetUniformLocation(program.id, "iResolution");
+    uniform_gtime = glGetUniformLocation(program.id, "iTime");
+    uniform_model = glGetUniformLocation(program.id, "model");
+    uniform_view = glGetUniformLocation(program.id, "view");
+    uniform_projection = glGetUniformLocation(program.id, "projection");
+
+    // ininitialize uniform values
+    glUniform2f(uniform_res, (float)windowWidth, (float)windowHeight);
+    glUniform1f(uniform_gtime, fTime());
+
+    //                          rotate, move_x, move_y, move_z, matrix 
+    createTransformationMatrix(    0.0,    0.0,    0.0,    0.0, model);
+    createTransformationMatrix(    0.0,    0.0,    0.0,    0.0, view);
+    createTransformationMatrix(    0.0,    0.0,    0.0,    0.0, projection);
+    // void glUniformMatrix4fv( GLint location,GLsizei count,GLboolean transpose,const GLfloat *value);
+    glUniformMatrix4fv(uniform_model, 1, GL_FALSE, (const GLfloat*)model);
+    glUniformMatrix4fv(uniform_view, 1, GL_FALSE, (const GLfloat*)view);
+    glUniformMatrix4fv(uniform_projection, 1, GL_FALSE, (const GLfloat*)projection);
+
+    return SUCCESS;
 }
+
+static void resize(int width, int height) {
+    if(windowWidth==width && windowHeight==height) {
+        return;
+    }
+    windowWidth = width;
+    windowHeight = height;
+    SDL_Log("resize %d,%d\n",width,height);
+    glViewport(0,0,width,height);
+    glUniform2f(uniform_res, (float)windowWidth, (float)windowHeight);
+}
+
+static void update() {
+    rotation = rotation + 1.0f;
+    if(rotation>=360.0) {
+        rotation = 0.0;
+    }
+    //                            rotate, move_x, move_y, move_z, matrix 
+    createTransformationMatrix( rotation,    0.0,    0.0,    0.0, model);
+    // void glUniformMatrix4fv( GLint location,GLsizei count,GLboolean transpose,const GLfloat *value);
+    glUniformMatrix4fv(uniform_model, 1, GL_FALSE, (const GLfloat*)model);
+
+    glUniform1f(uniform_gtime, fTime());
+}
+
+static void draw() {
+    // clear
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    // draw from array
+    glDrawArrays(drawMode, 0, nvertices);
+}
+
+// polling event and execute actions
+static int pollingEvent()
+{
+    SDL_Event ev;
+    while ( SDL_PollEvent(&ev) )
+    {
+        switch(ev.type){
+            case SDL_QUIT: {
+                // raise when exit event is occur
+                SDL_Log("QUIT\n");
+                return FALSE;
+            }
+            case SDL_KEYDOWN: {
+                SDL_Keycode key;
+                SDL_Log(".");
+                // raise when key down
+                key = ev.key.keysym.sym;
+                // ESC
+                if(key == SDLK_ESCAPE){
+                    SDL_Log("ESC\n");
+                    return FALSE;
+                }
+                break;
+            }
+            case SDL_WINDOWEVENT: {
+                SDL_WindowEventID event;
+                event = (SDL_WindowEventID)ev.window.event;
+                if(event == SDL_WINDOWEVENT_RESIZED) {
+                    resize(ev.window.data1,ev.window.data2);
+                }
+            }
+        }
+    }
+    return TRUE;
+}
+
+int main(int argc, char *argv[])
+{
+    static Uint64 interval;
+    static Uint64 nextTime;
+    if(!init()) {
+        return 0;
+    }
+    if(!initShader()) {
+        return 0;
+    }
+
+    SDL_Log("Exit with ESC key.\n");
+
+    // mainloop
+    interval = 1000 / FPS;
+    nextTime = SDL_GetTicks64() + interval;
+    int skipDraw = FALSE;
+
+    while (TRUE) {
+        // check event
+        if (!pollingEvent()) {
+            break;
+        }
+
+        // update and draw
+        update();
+        if (!skipDraw) {
+            draw();
+            SDL_GL_SwapWindow(window);
+        }
+
+        int delayTime = (int)(nextTime - SDL_GetTicks64());
+        if (delayTime > 0) {
+            SDL_Delay(delayTime);
+            skipDraw = FALSE;
+        } else {
+            // skip next draw step because of no time
+            skipDraw = TRUE;
+        }
+
+        nextTime += interval;
+    }
+
+    // finalize
+    finalize();
+  
+    return 0;
+}
+
