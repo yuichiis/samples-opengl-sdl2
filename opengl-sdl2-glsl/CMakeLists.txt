@@ -86,7 +86,7 @@ elseif(UNIX)
     pkg_check_modules(GLEW REQUIRED glew)
     include_directories(${GLEW_INCLUDE_DIRS})
     link_directories(${GLEW_LIBRARY_DIRS})
-    set(OPENGL_LIBS ${SDL2_IMAGE_LIBRARIES})
+    set(OPENGL_LIBS ${GLEW_LIBRARIES})
 endif()
 message(STATUS "OPENGL_LIBS: ${OPENGL_LIBS}")
 
