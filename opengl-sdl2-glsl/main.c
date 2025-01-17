@@ -52,7 +52,6 @@ static GLfloat projection[4][4];
 // object names
 static GLint buffer_vertices;
 static GLint uniform_res;
-static GLint uniform_gtime;
 static GLint uniform_model;
 static GLint uniform_view;
 static GLint uniform_projection;
@@ -167,25 +166,6 @@ program_t load_shaders(
     return shader_program;
 }
 
-GLfloat fTime(void)
-{
-    static Uint64 start      = 0;
-    static Uint64 frequency  = 0;
-
-    if (start==0){
-        start         =    SDL_GetPerformanceCounter();
-        frequency     =    SDL_GetPerformanceFrequency();
-        return 0.0f;
-    }
-
-    Uint64 counter         = SDL_GetPerformanceCounter();
-    Uint64 accumulate      = counter - start;
-
-    GLfloat timefloat = (GLfloat)accumulate / (GLfloat)frequency;
-    return timefloat;
-}
-
-#include <math.h>
 
 static void createTransformationMatrix(
     GLfloat angle,
@@ -343,7 +323,6 @@ static int initShader()
     const char *frag_sources[] = {
         "#version 100\n"
         "precision mediump float;\n"
-        "uniform float iTime;\n"
         "uniform vec2  iResolution;\n"
         "void main(){\n"
             "float red = abs(gl_FragCoord.x/iResolution.x);\n"
@@ -387,14 +366,12 @@ static int initShader()
 
     // setup uniforms
     uniform_res = glGetUniformLocation(program.id, "iResolution");
-    uniform_gtime = glGetUniformLocation(program.id, "iTime");
     uniform_model = glGetUniformLocation(program.id, "model");
     uniform_view = glGetUniformLocation(program.id, "view");
     uniform_projection = glGetUniformLocation(program.id, "projection");
 
     // ininitialize uniform values
     glUniform2f(uniform_res, (float)windowWidth, (float)windowHeight);
-    glUniform1f(uniform_gtime, fTime());
 
     //                          rotate, move_x, move_y, move_z, matrix 
     createTransformationMatrix(    0.0,    0.0,    0.0,    0.0, model);
@@ -429,7 +406,6 @@ static void update() {
     // void glUniformMatrix4fv( GLint location,GLsizei count,GLboolean transpose,const GLfloat *value);
     glUniformMatrix4fv(uniform_model, 1, GL_FALSE, (const GLfloat*)model);
 
-    glUniform1f(uniform_gtime, fTime());
 }
 
 static void draw() {
