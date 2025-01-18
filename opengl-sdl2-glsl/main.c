@@ -326,7 +326,7 @@ static int initShader()
         "uniform vec2  resolution;\n"
         "void main(){\n"
             "float red = abs(gl_FragCoord.x/resolution.x);\n"
-            "gl_FragColor=vec4(red, 0.0, 0.0, 0.0);\n"
+            "gl_FragColor=vec4(red, 0.0, 0.0, 1.0);\n"
         "}\n"
     };
 
