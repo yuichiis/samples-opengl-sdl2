@@ -29,6 +29,29 @@ static SDL_Surface*  primarySurface = NULL;
 static float rotation = 0.0;
 static GLuint image_texture_id = 0;
 
+static void displayGLVersions(void)
+{
+    int maj;
+    int min;
+    SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION,   &maj);
+    SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION,   &min);
+    SDL_Log("Using OpenGL %d.%d", maj, min);
+
+    SDL_Log(
+        "\nGL_VERSION   : %s"
+        "\nGL_VENDOR    : %s"
+        "\nGL_RENDERER  : %s"
+        "\nGLSL VERSION : %s"
+        //"\nGL_EXTENSIONS  : %s"
+        "\n",
+        glGetString(GL_VERSION),
+        glGetString(GL_VENDOR),
+        glGetString(GL_RENDERER),
+        glGetString(GL_SHADING_LANGUAGE_VERSION)
+        //glGetString(GL_EXTENSIONS)
+    );
+}
+
 static int init() {
 
     //// Init Window
@@ -54,6 +77,8 @@ static int init() {
         printf("Unable to Init GL Context: %s", SDL_GetError());
         return 0;
     }
+    // It can call the glGetString() after the SDL_GL_CreateContext
+    displayGLVersions();
 
     // setup viewport
     glViewport(0, 0, windowWidth, windowHeight); // Default
